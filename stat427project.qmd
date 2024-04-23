@@ -17,10 +17,37 @@ output:
 # Data Cleaning 
 
 ```{r}
+rm(list=ls())
+gc()
+```
+
+```{r}
 library(readr)
 data <- read_csv("TIMES_WorldUniversityRankings_2024.csv")
 data_clean <- data[, c("rank", "name","scores_overall","scores_teaching","scores_research","scores_citations","scores_industry_income","scores_international_outlook","location","stats_number_students","stats_student_staff_ratio", "stats_pc_intl_students", "stats_female_male_ratio")]
 
+data_clean <- data_clean[1:1904, ]
+#significant amounts of NA's after the 1904th row 
+str(data_clean)
+
+data_clean$International_School <- ifelse(data_clean$location == "United States", "no", "yes")
+#new variable for international school 
+
+data_clean <- na.omit(data_clean)
+#remove na's. most were in gender ratio
+
+
+#converting into numerics
+data_clean$scores_teaching <- as.numeric(as.numeric(data_clean$scores_teaching))
+data_clean$scores_research <- as.numeric(as.numeric(data_clean$scores_research))
+data_clean$scores_citations <- as.numeric(as.numeric(data_clean$scores_citations))
+data_clean$scores_industry_income <- as.numeric(as.numeric(data_clean$scores_industry_income))
+data_clean$scores_international_outlook <- as.numeric(as.numeric(data_clean$scores_international_outlook))
+
+
+#converting percentages into proportions
+data_clean$stats_pc_intl_students <- as.numeric(gsub("%", "", data_clean$stats_pc_intl_students))
+data_clean$stats_pc_intl_students <- data_clean$stats_pc_intl_students / 100
 
 ```
 
