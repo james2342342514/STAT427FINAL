@@ -12,11 +12,11 @@ output:
 
 ## 
 
-# An \"executive\" summary that succinctly describes the most important findings and recommendations in a manner that entices the viewer/reader to engage more with your poster or report.
+# An "executive" summary that succinctly describes the most important findings and recommendations in a manner that entices the viewer/reader to engage more with your poster or report.
 
-# Method 1 - 
+# Method 1 -
 
-# Method 2 - 
+# Method 2 -
 
 # Method 3 -
 
