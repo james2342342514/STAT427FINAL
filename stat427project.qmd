@@ -1,6 +1,6 @@
 ---
 title: "STAT-427 Final Project"
-author: "James Trinkle"
+author: "James, Gabe, Tom"
 format: html
 editor: visual
 output:
