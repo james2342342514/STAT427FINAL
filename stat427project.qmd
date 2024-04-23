@@ -12,7 +12,9 @@ output:
 
 ## 
 
-# An "executive" summary that succinctly describes the most important findings and recommendations in a manner that entices the viewer/reader to engage more with your poster or report.
+# Executive Summary
+
+### An "executive" summary that succinctly describes the most important findings and recommendations in a manner that entices the viewer/reader to engage more with your poster or report.
 
 # Data Cleaning
 
@@ -66,9 +68,44 @@ data_clean$female_proportion <- sapply(ratio_parts, function(ratio) {
   return(female_part / total)
 })
 
-#clean rank variable
+#clean rank variable? shold we keep scores_overall or rank? They will need to be cleaned a little bit 
 
-data_clean <- data_clean[, c("rank", "name","scores_teaching","scores_research","scores_citations","scores_industry_income","scores_international_outlook","location","stats_number_students","stats_student_staff_ratio", "stats_pc_intl_students", "International_School","female_proportion")]
+# Assuming your data frame is called 'data'
+
+
+# Assuming your data frame is called 'data'
+
+# Assuming your data frame is called 'data'
+
+# A function to convert rank values to a single numeric value
+convert_rank <- function(rank) {
+  rank <- gsub("=", "", rank) # Remove '='
+  if (rank == "1501+") {
+    # Assign a numeric value for open-ended rank - could be 1501 or a higher estimated value
+    return(1501) # You can change this if you wish to estimate differently
+  }
+  
+  # If it's a range, take the midpoint
+  if (grepl("–", rank)) {
+    parts <- strsplit(rank, "–")[[1]]
+    lower <- as.numeric(parts[1])
+    upper <- as.numeric(parts[2])
+    return((lower + upper) / 2)
+  } else {
+    # If it's not a range, just convert it to numeric
+    return(as.numeric(rank))
+  }
+}
+
+# Apply the function to each rank value
+data_clean$clean_rank <- sapply(data_clean$rank, convert_rank)
+
+# Check if conversion has created any NA values
+sum(is.na(data_clean$clean_rank))
+
+
+
+data_clean <- data_clean[, c("rank", "name","scores_teaching","scores_research","scores_citations","scores_industry_income","scores_international_outlook","location","stats_number_students","stats_student_staff_ratio", "stats_pc_intl_students", "International_School","female_proportion", "clean_rank")]
 
 ```
 
@@ -103,8 +140,9 @@ data_clean <- data_clean[, c("rank", "name","scores_teaching","scores_research",
 # Method 1 - Linear Regression JAMES
 
 ```{r}
+
 data_clean$International_School_binary <- ifelse(data_clean$International_School == "yes", 1, 0)
-linear_model <- glm(International_School_binary ~ scores_teaching + scores_research + scores_citations + scores_industry_income + scores_international_outlook + stats_student_staff_ratio + stats_pc_intl_students + female_proportion, data = data_clean)
+linear_model <- lm(clean_rank ~ scores_teaching + scores_research + scores_citations + scores_industry_income + scores_international_outlook + stats_number_students + stats_student_staff_ratio + stats_pc_intl_students + female_proportion +International_School_binary, data = data_clean)
 summary(linear_model)
 
 par(mfrow=c(2,2))
@@ -113,19 +151,37 @@ plot(linear_model)
 
 # Method 2 - JAMES
 
+```{r}
+
+```
+
 # Method 3 - TOM
 
 # Method 4 - TOM
 
-# Method 5 - GABE 
+# Method 5 - GABE
 
-# Method 6 -GABE 
+# Method 6 -GABE
 
 # Identify the data source, describe the original data, and any challenges or choices in cleaning the data for analysis. - JAMES
 
--   first challenge is we will have to remove a lot of na's which will mkae the dataset significantly smaller
+### Data Source
 
-# Identify the stakeholders in the analysis and its outcomes. Assess any ethical implications of the data (collection methods, sources, structure) or the choices made in the analysis (grouping, selection, etc.) or any other responsible data science concerns for implementation. 
+-   
+
+### Description of Original Data
+
+-   
+
+### Challenges and Choices While Cleaning
+
+-   
+
+# Identify the stakeholders in the analysis and its outcomes. Assess any ethical implications of the data (collection methods, sources, structure) or the choices made in the analysis (grouping, selection, etc.) or any other responsible data science concerns for implementation.
+
+-   key stakeholder = colleges. We should try to find what factors they should focus on improving the most in order to improve their global rank
+
+-   
 
 # Summarize Findings
 
