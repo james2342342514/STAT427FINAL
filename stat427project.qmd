@@ -14,6 +14,15 @@ output:
 
 # An "executive" summary that succinctly describes the most important findings and recommendations in a manner that entices the viewer/reader to engage more with your poster or report.
 
+# Data Cleaning 
+
+```{r}
+library(readr)
+data <- read_csv("TIMES_WorldUniversityRankings_2024.csv")
+data_clean <- data[, c("rank", "name","scores_overall","scores_teaching","scores_research","scores_citations","scores_industry_income","scores_international_outlook","location","stats_number_students","stats_student_staff_ratio", "stats_pc_intl_students", "stats_female_male_ratio")]
+
+```
+
 # Method 1 -
 
 # Method 2 -
