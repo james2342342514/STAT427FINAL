@@ -12,6 +12,8 @@ output:
 
 ### An "executive" summary that succinctly describes the most important findings and recommendations in a manner that entices the viewer/reader to engage more with your poster or report.
 
+-   It's important to note that multicollinearity is primarily a concern when the purpose of the regression is to understand the influence of individual predictors. multicollineraity a problem for us
+
 ```{r echo=FALSE, results='hide', message=FALSE, warning=FALSE}
 rm(list=ls())
 gc()
@@ -136,19 +138,36 @@ summary(linear_model)
 linear_model2 <- lm(clean_rank ~ scores_teaching + scores_citations + scores_industry_income + scores_international_outlook, data = data_clean)
 summary(linear_model2)
 
-linear_model3 <- lm(clean_rank ~ stats_number_students + stats_student_staff_ratio + stats_pc_intl_students + female_proportion + International_School_binary, data = data_clean)
-summary(linear_model3)
+anova(linear_model,linear_model2)
 
-linear_model4 <- lm(clean_rank ~ stats_number_students + stats_pc_intl_students + International_School_binary, data = data_clean)
-summary(linear_model4)
 
 par(mfrow=c(2,2))
 plot(linear_model)
 
-anova(linear_model4,linear_model)
+
+library(car)
+
+vif_values <- vif(linear_model)
+
+# Print the VIF values
+print(vif_values)
+
 ```
 
--   
+-   The VIF values are:
+
+    | Variable                     | VIF      |
+    |------------------------------|----------|
+    | scores_teaching              | 5.336037 |
+    | scores_research              | 7.606038 |
+    | scores_citations             | 2.252497 |
+    | scores_industry_income       | 2.749347 |
+    | scores_international_outlook | 3.631838 |
+    | stats_number_students        | 1.171036 |
+    | stats_student_staff_ratio    | 1.429422 |
+    | stats_pc_intl_students       | 2.745453 |
+    | female_proportion            | 1.089991 |
+    | International_School_binary  | 1.221743 |
 
 # Method 2 - JAMES
 
@@ -158,20 +177,48 @@ library(leaps)
 library(tidyverse)
 library(glmnet)
 
-predictors <- model.matrix(clean_rank ~ scores_teaching + scores_research + scores_citations + scores_industry_income + scores_international_outlook + stats_number_students + stats_student_staff_ratio + stats_pc_intl_students + female_proportion + International_School_binary - 1, data = data_clean)
-response <- data_clean$clean_rank
+library(glmnet)
+library(caret)  # For data partitioning
 
-set.seed(123) # Set a seed for reproducibility
-cv_fit <- cv.glmnet(predictors, response, alpha = 1) # alpha=1 specifies Lasso regression
+# Assuming 'data_clean' is your dataset
+set.seed(123)  # Set a seed for reproducibility
 
+# Split data into training (80%) and testing (20%)
+trainIndex <- createDataPartition(data_clean$clean_rank, p = 0.8, list = FALSE)
+train_data <- data_clean[trainIndex, ]
+test_data <- data_clean[-trainIndex, ]
+
+# Prepare predictors
+train_predictors <- model.matrix(clean_rank ~ scores_teaching + scores_research + scores_citations + scores_industry_income + scores_international_outlook + stats_number_students + stats_student_staff_ratio + stats_pc_intl_students + female_proportion + International_School_binary - 1, data = train_data)
+test_predictors <- model.matrix(clean_rank ~ scores_teaching + scores_research + scores_citations + scores_industry_income + scores_international_outlook + stats_number_students + stats_student_staff_ratio + stats_pc_intl_students + female_proportion + International_School_binary - 1, data = test_data)
+
+# Response variable
+train_response <- train_data$clean_rank
+test_response <- test_data$clean_rank
+
+# Lasso regression model with cross-validation
+cv_fit <- cv.glmnet(train_predictors, train_response, alpha = 1) # alpha=1 specifies Lasso regression
+
+# Find best lambda
 best_lambda <- cv_fit$lambda.min
 
-final_model <- glmnet(predictors, response, alpha = 1, lambda = best_lambda)
+# Train final model with the best lambda on the training data
+final_model <- glmnet(train_predictors, train_response, alpha = 1, lambda = best_lambda)
 
+# Coefficients of the final model
 coef(final_model)
 
+# Plot CV error as function of lambda
 plot(cv_fit$lambda, cv_fit$cvm, type='l', xlab='Lambda', ylab='Cross-Validated Error')
 points(cv_fit$lambda.min, cv_fit$cvm[cv_fit$lambda == cv_fit$lambda.min], col='red', pch=20)
+
+# Predict on test data
+predictions <- predict(final_model, s = best_lambda, newx = test_predictors)
+
+# Evaluate model performance
+mse <- mean((predictions - test_response)^2)
+mse
+
 ```
 
 # Method 3 - TOM
