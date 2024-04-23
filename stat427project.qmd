@@ -1,13 +1,14 @@
 ---
 title: "STAT-427 Final Project"
 author: "James, Gabe, Tom"
-format: html
-editor: visual
-output:
-  html_document: 
-    toc: yes
+output: 
+  word_document:
+    toc: true
     toc_depth: 2
-    number_sections: no
+    number_sections: false
+editor_options: 
+  markdown:
+    visual: true
 ---
 
 ## 
@@ -137,6 +138,8 @@ data_clean <- data_clean[, c("rank", "name","scores_teaching","scores_research",
 
     -   **International_School:** International school = yes, United States = no
 
+    -   **clean_rank:** transformation on rank
+
 # Method 1 - Linear Regression JAMES
 
 ```{r}
@@ -145,9 +148,23 @@ data_clean$International_School_binary <- ifelse(data_clean$International_School
 linear_model <- lm(clean_rank ~ scores_teaching + scores_research + scores_citations + scores_industry_income + scores_international_outlook + stats_number_students + stats_student_staff_ratio + stats_pc_intl_students + female_proportion +International_School_binary, data = data_clean)
 summary(linear_model)
 
+
+linear_model2 <- lm(clean_rank ~ scores_teaching + scores_research + scores_citations + scores_industry_income + scores_international_outlook, data = data_clean)
+summary(linear_model2)
+
+linear_model3 <- lm(clean_rank ~ stats_number_students + stats_student_staff_ratio + stats_pc_intl_students + female_proportion + International_School_binary, data = data_clean)
+summary(linear_model3)
+
+linear_model4 <- lm(clean_rank ~ stats_number_students + stats_pc_intl_students + International_School_binary, data = data_clean)
+summary(linear_model4)
+
+linear_model5 <- lm(clean_rank ~ female_proportion, data = data_clean)
+
 par(mfrow=c(2,2))
 plot(linear_model)
 ```
+
+-   
 
 # Method 2 - JAMES
 
@@ -163,19 +180,21 @@ plot(linear_model)
 
 # Method 6 -GABE
 
-# Identify the data source, describe the original data, and any challenges or choices in cleaning the data for analysis. - JAMES
+# Identify the data source, describe the original data, and any challenges or choices in cleaning the data for analysis.
 
 ### Data Source
 
--   
+-   The Times Higher Education (THE) World University Rankings for 2024 offers a comprehensive evaluation of universities across the globe, leveraging a methodology fine-tuned since its inception in 2004. As detailed in the methodology PDF for the 2024 rankings, the analysis spans five core areas: Teaching, Research Environment, Research Quality, International Outlook, and Industry Engagement. Times Higher Education, recognized for over five decades as a leading source of analysis and insights into higher education trends, utilizes high quality data to ensure that their rankings are a trusted resource for students, educators, institutions, and policymakers alike.
+
+-   A named representative from each participating institution submits data through the THE Portal, which then undergoes a rigorous validation process. The final rankings are determined by weighted metrics, reflecting the relative importance assigned to each pillar. The 2024 edition, published in November 2023, marks a significant update to the methodology, incorporating and enhancing international metrics. The Times Higher Education claims this shows their dedication to evolving with the dynamic landscape of global higher education.
 
 ### Description of Original Data
 
--   
+-   The data set "TIMES World University Rankings 2024" has detailed information on 2,673 universities across 29 variables. Each entry includes the university's rank, name, and specific scores in categories such as overall, teaching, research, citations, industry income, and international outlook, with both scores and corresponding rankings provided. Additional details include the type of record, membership level, web URLs. The dataset also provides geographical location, the number of students, student-to-staff ratio, percentage of international students, and female-to-male ratio. Additional attributes cover the university's status regarding closure, accreditation, and accessibility. Subjects offered by each university are listed, offering insights into the academic diversity present across these institutions. The original data set has a number of issues. For example, the variable unaccredited has 2672 FALSE and only 1 TRUE. Another problem is the variable "disabled" has no mention of it in the methodology sheet on the companies website. subjects_offered is a long string of the subjects offered which is difficult for us to turn into a usable variable. record_type also has no mention in the methodology.
 
 ### Challenges and Choices While Cleaning
 
--   
+-   There were a number of challenges and choices made in the cleaning process. Firstly, a large chunk of the data was removed from the start because every observation after 1904 had significant N/A's across the majority of the variables. This was a difficult choice because it narrowed our observations by 769 which was a substantial part of the data set. The second choice made while cleaning was creating a new variable, International_School, saying the location of the University. This decreases the robustness of the data set by narrowing geography to United States or otherwise, therefore not allowing us to capture differences between countries. However, we felt with \~1800 observations, this was the best choice. The third choice made while cleaning was to remove 77 observations due to N/A's primarily found in the gender ratio variable. We felt this would be an important variable for us so it was best to remove the observations. A significant challenge while cleaning the data was the csv primarily loaded in with character data types. There were a number of conversions from character to numeric that had to be done for the majority of the scores\_ variables. Additionally, variables were loaded in as percentages or ratios which had to be transformed. For example, the percentage of international students was turned into a decimal. Another example of a conversion was changing the female to male ratio into a proportion. Lastly, the biggest challenge was cleaning the rank variable. The methodology says, "For the institutions ranked 1 -- 200 overall, an individual rank position is listed. The next institutions are assigned to the following bands: 201-250, 251-300, 301-350, 351-400, 401-500, 501-600, 601-800, 801-1000, 1001-1200, 1201-1500, 1501+" (World University Rankings). For universities after 200, we took the midpoint of their respective band and turned it into a numeric. This choice was made because we felt it was the best way to turn a universities ranking into a numeric we can use in regression analysis.
 
 # Identify the stakeholders in the analysis and its outcomes. Assess any ethical implications of the data (collection methods, sources, structure) or the choices made in the analysis (grouping, selection, etc.) or any other responsible data science concerns for implementation.
 
