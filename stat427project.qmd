@@ -21,7 +21,36 @@ library(readr)
 data <- read_csv("TIMES_WorldUniversityRankings_2024.csv")
 data_clean <- data[, c("rank", "name","scores_overall","scores_teaching","scores_research","scores_citations","scores_industry_income","scores_international_outlook","location","stats_number_students","stats_student_staff_ratio", "stats_pc_intl_students", "stats_female_male_ratio")]
 
+
 ```
+
+-   This is a short description of the variables selected:
+
+    -   **rank**: The university's position in the rankings compared to other institutions globally.
+
+    -   **name**: The official name of the university.
+
+    -   **scores_overall**: The overall score that the university has received based on the aggregated performance across various metrics.
+
+    -   **scores_teaching**: The score for teaching, which reflects the university\'s reputation for teaching quality and the learning environment, including staff-to-student ratios and doctorate-to-bachelor's ratios.
+
+    -   **scores_research**: The score for research, which assesses the volume, income, and reputation of the university\'s research activities.
+
+    -   **scores_citations**: The score for citations, indicating how much research from the university is acknowledged and cited globally. This is a measure of research influence.
+
+    -   **scores_industry_income**: A score that reflects the university\'s ability to help industry with innovations, inventions, and consultancy.
+
+    -   **scores_international_outlook**: This score measures the university's ability to attract students and faculty from overseas, as well as its international collaboration on research projects.
+
+    -   **location**: The country or region where the university is located.
+
+    -   **stats_number_students**: The total number of students enrolled at the university.
+
+    -   **stats_student_staff_ratio**: The ratio of students to academic staff, indicating the number of students per staff member.
+
+    -   **stats_pc_intl_students**: The percentage of students at the university who are international
+
+    -   **stats_female_male_ratio**: The ratio of female to male students
 
 # Method 1 -
 
@@ -36,6 +65,8 @@ data_clean <- data[, c("rank", "name","scores_overall","scores_teaching","scores
 # Method 6 -
 
 # Identify the data source, describe the original data, and any challenges or choices in cleaning the data for analysis.
+
+-   first challenge is we will have to remove a lot of na's which will mkae the dataset significantly smaller
 
 # Identify the stakeholders in the analysis and its outcomes. Assess any ethical implications of the data (collection methods, sources, structure) or the choices made in the analysis (grouping, selection, etc.) or any other responsible data science concerns for implementation.
 
