@@ -14,7 +14,7 @@ output:
 
 # An "executive" summary that succinctly describes the most important findings and recommendations in a manner that entices the viewer/reader to engage more with your poster or report.
 
-# Data Cleaning 
+# Data Cleaning
 
 ```{r}
 rm(list=ls())
@@ -22,7 +22,11 @@ gc()
 ```
 
 ```{r}
+library(tidyverse)
 library(readr)
+library(ISLR2)
+library(Hmisc)
+library(GGally)
 data <- read_csv("TIMES_WorldUniversityRankings_2024.csv")
 data_clean <- data[, c("rank", "name","scores_overall","scores_teaching","scores_research","scores_citations","scores_industry_income","scores_international_outlook","location","stats_number_students","stats_student_staff_ratio", "stats_pc_intl_students", "stats_female_male_ratio")]
 
@@ -62,6 +66,10 @@ data_clean$female_proportion <- sapply(ratio_parts, function(ratio) {
   return(female_part / total)
 })
 
+#clean rank variable
+
+data_clean <- data_clean[, c("rank", "name","scores_teaching","scores_research","scores_citations","scores_industry_income","scores_international_outlook","location","stats_number_students","stats_student_staff_ratio", "stats_pc_intl_students", "International_School","female_proportion")]
+
 ```
 
 -   This is a description of the variables selected:
@@ -70,15 +78,13 @@ data_clean$female_proportion <- sapply(ratio_parts, function(ratio) {
 
     -   **name**: The official name of the university.
 
-    -   **scores_overall**: The overall score that the university has received based on the aggregated performance across various metrics.
+    -   **scores_teaching**: The score for teaching, which reflects the university's reputation for teaching quality and the learning environment, including staff-to-student ratios and doctorate-to-bachelor's ratios.
 
-    -   **scores_teaching**: The score for teaching, which reflects the university\'s reputation for teaching quality and the learning environment, including staff-to-student ratios and doctorate-to-bachelor's ratios.
-
-    -   **scores_research**: The score for research, which assesses the volume, income, and reputation of the university\'s research activities.
+    -   **scores_research**: The score for research, which assesses the volume, income, and reputation of the university's research activities.
 
     -   **scores_citations**: The score for citations, indicating how much research from the university is acknowledged and cited globally. This is a measure of research influence.
 
-    -   **scores_industry_income**: A score that reflects the university\'s ability to help industry with innovations, inventions, and consultancy.
+    -   **scores_industry_income**: A score that reflects the university's ability to help industry with innovations, inventions, and consultancy.
 
     -   **scores_international_outlook**: This score measures the university's ability to attract students and faculty from overseas, as well as its international collaboration on research projects.
 
@@ -90,25 +96,36 @@ data_clean$female_proportion <- sapply(ratio_parts, function(ratio) {
 
     -   **stats_pc_intl_students**: The percentage of students at the university who are international
 
-    -   **stats_female_male_ratio**: The ratio of female to male students
+    -   **female_proportion**: The proportion of female to male students
 
-# Method 1 -
+    -   **International_School:** International school = yes, United States = no
 
-# Method 2 -
+# Method 1 - Linear Regression JAMES
 
-# Method 3 -
+```{r}
+data_clean$International_School_binary <- ifelse(data_clean$International_School == "yes", 1, 0)
+linear_model <- glm(International_School_binary ~ scores_teaching + scores_research + scores_citations + scores_industry_income + scores_international_outlook + stats_student_staff_ratio + stats_pc_intl_students + female_proportion, data = data_clean)
+summary(linear_model)
 
-# Method 4 -
+par(mfrow=c(2,2))
+plot(linear_model)
+```
 
-# Method 5 -
+# Method 2 - JAMES
 
-# Method 6 -
+# Method 3 - TOM
 
-# Identify the data source, describe the original data, and any challenges or choices in cleaning the data for analysis.
+# Method 4 - TOM
+
+# Method 5 - GABE 
+
+# Method 6 -GABE 
+
+# Identify the data source, describe the original data, and any challenges or choices in cleaning the data for analysis. - JAMES
 
 -   first challenge is we will have to remove a lot of na's which will mkae the dataset significantly smaller
 
-# Identify the stakeholders in the analysis and its outcomes. Assess any ethical implications of the data (collection methods, sources, structure) or the choices made in the analysis (grouping, selection, etc.) or any other responsible data science concerns for implementation.
+# Identify the stakeholders in the analysis and its outcomes. Assess any ethical implications of the data (collection methods, sources, structure) or the choices made in the analysis (grouping, selection, etc.) or any other responsible data science concerns for implementation. 
 
 # Summarize Findings
 
