@@ -90,9 +90,12 @@ data_clean$clean_rank <- sapply(data_clean$rank, convert_rank)
 # Check if conversion has created any NA values
 sum(is.na(data_clean$clean_rank))
 
+#binary intl school var
+data_clean$International_School_binary <- ifelse(data_clean$International_School == "yes", 1, 0)
 
 
-data_clean <- data_clean[, c("rank", "name","scores_teaching","scores_research","scores_citations","scores_industry_income","scores_international_outlook","location","stats_number_students","stats_student_staff_ratio", "stats_pc_intl_students", "International_School","female_proportion", "clean_rank")]
+
+data_clean <- data_clean[, c("rank", "name","scores_teaching","scores_research","scores_citations","scores_industry_income","scores_international_outlook","location","stats_number_students","stats_student_staff_ratio", "stats_pc_intl_students", "International_School","female_proportion", "clean_rank", "International_School_binary")]
 
 ```
 
@@ -130,26 +133,50 @@ data_clean <- data_clean[, c("rank", "name","scores_teaching","scores_research",
 
 ```{r}
 
-data_clean$International_School_binary <- ifelse(data_clean$International_School == "yes", 1, 0)
-linear_model <- lm(clean_rank ~ scores_teaching + scores_research + scores_citations + scores_industry_income + scores_international_outlook + stats_number_students + stats_student_staff_ratio + stats_pc_intl_students + female_proportion +International_School_binary, data = data_clean)
+library(caret)  # Load caret for data partitioning
+
+# Assuming 'data_clean' is your dataset
+set.seed(123)  # Set a seed for reproducibility
+
+# Split data into training (80%) and testing (20%)
+trainIndex <- createDataPartition(data_clean$clean_rank, p = 0.8, list = FALSE)
+train_data <- data_clean[trainIndex, ]
+test_data <- data_clean[-trainIndex, ]
+
+# Build linear model on training data
+linear_model <- lm(clean_rank ~ scores_teaching + scores_research + scores_citations + scores_industry_income + scores_international_outlook + stats_number_students + stats_student_staff_ratio + stats_pc_intl_students + female_proportion + International_School_binary, data = train_data)
+
+# Summarize the model
 summary(linear_model)
 
-
-linear_model2 <- lm(clean_rank ~ scores_teaching + scores_citations + scores_industry_income + scores_international_outlook, data = data_clean)
+# Build a second linear model on training data with fewer predictors
+linear_model2 <- lm(clean_rank ~ scores_citations + scores_industry_income + scores_international_outlook, data = train_data)
 summary(linear_model2)
 
-anova(linear_model,linear_model2)
+# Compare the two models using ANOVA
+anova(linear_model, linear_model2)
+
+# Predicting on the test data
+test_predictions1 <- predict(linear_model, newdata = test_data)
+test_predictions2 <- predict(linear_model2, newdata = test_data)
+
+# Calculate MSE for model evaluations
+mse1 <- mean((test_predictions1 - test_data$clean_rank)^2)
+mse2 <- mean((test_predictions2 - test_data$clean_rank)^2)
+
+# Print MSE for both models
+print(paste("MSE for linear_model: ", mse1))
+print(paste("MSE for linear_model2: ", mse2))
 
 
 par(mfrow=c(2,2))
-plot(linear_model)
+plot(linear_model2)
 
 
-library(car)
-
-vif_values <- vif(linear_model)
 
 # Print the VIF values
+library(car)
+vif_values <- vif(linear_model)
 print(vif_values)
 
 ```
@@ -158,16 +185,18 @@ print(vif_values)
 
     | Variable                     | VIF      |
     |------------------------------|----------|
-    | scores_teaching              | 5.336037 |
-    | scores_research              | 7.606038 |
-    | scores_citations             | 2.252497 |
-    | scores_industry_income       | 2.749347 |
-    | scores_international_outlook | 3.631838 |
-    | stats_number_students        | 1.171036 |
-    | stats_student_staff_ratio    | 1.429422 |
-    | stats_pc_intl_students       | 2.745453 |
-    | female_proportion            | 1.089991 |
-    | International_School_binary  | 1.221743 |
+    | scores_teaching              | 5.393177 |
+    | scores_research              | 7.777291 |
+    | scores_citations             | 2.276295 |
+    | scores_industry_income       | 2.807020 |
+    | scores_international_outlook | 3.752887 |
+    | stats_number_students        | 1.163679 |
+    | stats_student_staff_ratio    | 1.397833 |
+    | stats_pc_intl_students       | 2.844761 |
+    | female_proportion            | 1.085712 |
+    | International_School_binary  | 1.219962 |
+
+-   
 
 # Method 2 - JAMES
 
