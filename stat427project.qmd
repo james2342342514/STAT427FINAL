@@ -49,9 +49,22 @@ data_clean$scores_international_outlook <- as.numeric(as.numeric(data_clean$scor
 data_clean$stats_pc_intl_students <- as.numeric(gsub("%", "", data_clean$stats_pc_intl_students))
 data_clean$stats_pc_intl_students <- data_clean$stats_pc_intl_students / 100
 
+
+
+# conversion of female_male_variable
+
+ratio_parts <- strsplit(data_clean$stats_female_male_ratio, " : ")
+
+data_clean$female_proportion <- sapply(ratio_parts, function(ratio) {
+  parts <- as.numeric(ratio)
+  female_part <- parts[1]
+  total <- sum(parts)
+  return(female_part / total)
+})
+
 ```
 
--   This is a short description of the variables selected:
+-   This is a description of the variables selected:
 
     -   **rank**: The university's position in the rankings compared to other institutions globally.
 
