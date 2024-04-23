@@ -5,26 +5,20 @@ output:
   word_document:
     toc: true
     toc_depth: 2
-    number_sections: false
-editor_options: 
-  markdown:
-    visual: true
+    number_sections: true
 ---
-
-## 
 
 # Executive Summary
 
 ### An "executive" summary that succinctly describes the most important findings and recommendations in a manner that entices the viewer/reader to engage more with your poster or report.
 
-# Data Cleaning
-
-```{r}
+```{r echo=FALSE, results='hide', message=FALSE, warning=FALSE}
 rm(list=ls())
 gc()
 ```
 
-```{r}
+```{r echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+#Initial Data Cleaning
 library(tidyverse)
 library(readr)
 library(ISLR2)
@@ -69,31 +63,21 @@ data_clean$female_proportion <- sapply(ratio_parts, function(ratio) {
   return(female_part / total)
 })
 
-#clean rank variable? shold we keep scores_overall or rank? They will need to be cleaned a little bit 
-
-# Assuming your data frame is called 'data'
-
-
-# Assuming your data frame is called 'data'
-
-# Assuming your data frame is called 'data'
-
-# A function to convert rank values to a single numeric value
+#clean rank variable?
+#ranks to numeric
 convert_rank <- function(rank) {
-  rank <- gsub("=", "", rank) # Remove '='
+  rank <- gsub("=", "", rank) 
   if (rank == "1501+") {
-    # Assign a numeric value for open-ended rank - could be 1501 or a higher estimated value
-    return(1501) # You can change this if you wish to estimate differently
+    return(1501) 
   }
   
-  # If it's a range, take the midpoint
+  #midpoint
   if (grepl("–", rank)) {
     parts <- strsplit(rank, "–")[[1]]
     lower <- as.numeric(parts[1])
     upper <- as.numeric(parts[2])
     return((lower + upper) / 2)
   } else {
-    # If it's not a range, just convert it to numeric
     return(as.numeric(rank))
   }
 }
@@ -149,7 +133,7 @@ linear_model <- lm(clean_rank ~ scores_teaching + scores_research + scores_citat
 summary(linear_model)
 
 
-linear_model2 <- lm(clean_rank ~ scores_teaching + scores_research + scores_citations + scores_industry_income + scores_international_outlook, data = data_clean)
+linear_model2 <- lm(clean_rank ~ scores_teaching + scores_citations + scores_industry_income + scores_international_outlook, data = data_clean)
 summary(linear_model2)
 
 linear_model3 <- lm(clean_rank ~ stats_number_students + stats_student_staff_ratio + stats_pc_intl_students + female_proportion + International_School_binary, data = data_clean)
@@ -158,10 +142,10 @@ summary(linear_model3)
 linear_model4 <- lm(clean_rank ~ stats_number_students + stats_pc_intl_students + International_School_binary, data = data_clean)
 summary(linear_model4)
 
-linear_model5 <- lm(clean_rank ~ female_proportion, data = data_clean)
-
 par(mfrow=c(2,2))
 plot(linear_model)
+
+anova(linear_model4,linear_model)
 ```
 
 -   
@@ -169,10 +153,33 @@ plot(linear_model)
 # Method 2 - JAMES
 
 ```{r}
+library(ISLR2)
+library(leaps)
+library(tidyverse)
+library(glmnet)
 
+predictors <- model.matrix(clean_rank ~ scores_teaching + scores_research + scores_citations + scores_industry_income + scores_international_outlook + stats_number_students + stats_student_staff_ratio + stats_pc_intl_students + female_proportion + International_School_binary - 1, data = data_clean)
+response <- data_clean$clean_rank
+
+set.seed(123) # Set a seed for reproducibility
+cv_fit <- cv.glmnet(predictors, response, alpha = 1) # alpha=1 specifies Lasso regression
+
+best_lambda <- cv_fit$lambda.min
+
+final_model <- glmnet(predictors, response, alpha = 1, lambda = best_lambda)
+
+coef(final_model)
+
+plot(cv_fit$lambda, cv_fit$cvm, type='l', xlab='Lambda', ylab='Cross-Validated Error')
+points(cv_fit$lambda.min, cv_fit$cvm[cv_fit$lambda == cv_fit$lambda.min], col='red', pch=20)
 ```
 
 # Method 3 - TOM
+
+```{r}
+
+
+```
 
 # Method 4 - TOM
 
