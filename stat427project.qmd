@@ -249,11 +249,80 @@ mse_lasso
 # Method 3 - TOM
 
 ```{r}
+# Load necessary libraries
+library(glmnet)
+library(caret)
+
+# Prepare the matrix of predictors and the response variable
+predictors3 <- model.matrix(scores_research ~ . - 1, data = data_clean)  # -1 to exclude intercept
+response3 <- data_clean$scores_research
+
+# Split data into training and test sets
+set.seed(123)  
+train_indices3 <- createDataPartition(response3, p = 0.8, list = FALSE)
+train_data3 <- predictors3[train_indices3, ]
+train_response3 <- response3[train_indices3]
+test_data3 <- predictors3[-train_indices3, ]
+test_response3 <- response3[-train_indices3]
+
+# Fit Ridge Regression model
+grid3 <- 10^seq(4, -2, length = 100)
+cv_model3 <- cv.glmnet(train_data3, train_response3, alpha = 0, lambda = grid3, type.measure = "mse")
+best_lambda3 <- cv_model3$lambda.min
+
+# Fit the model with the best lambda
+model3 <- glmnet(train_data3, train_response3, alpha = 0, lambda = best_lambda3)
+
+# Make predictions and calculate RMSE
+predictions3 <- predict(model3, s = best_lambda3, newx = test_data3)
+rmse3 <- sqrt(mean((predictions3 - test_response3)^2))
+
+# Print the results
+print(paste("Best Lambda:", best_lambda3))
+print(paste("Test RMSE:", rmse3))
 
 
 ```
 
 # Method 4 - TOM
+
+```{r}
+library(dplyr)
+library(caret)
+library(glmnet)  
+
+threshold4 <- median(data_clean$scores_research, na.rm = TRUE)
+
+data_clean$High_Research_Influence <- ifelse(data_clean$scores_research > threshold4, "High", "Low")
+data_clean$High_Research_Influence <- as.factor(data_clean$High_Research_Influence)
+
+predictors4 <- model.matrix(High_Research_Influence ~ . - 1 - scores_research, data = data_clean)
+response4 <- data_clean$High_Research_Influence
+
+set.seed(123)  
+train_indices4 <- createDataPartition(response4, p = 0.8, list = TRUE)
+train_data4 <- predictors4[train_indices4[[1]], ]
+train_response4 <- response4[train_indices4[[1]]]
+test_data4 <- predictors4[-train_indices4[[1]], ]
+test_response4 <- response4[-train_indices4[[1]]]
+
+logistic_model4 <- glm(High_Research_Influence ~ ., family = binomial(), data = data_clean)
+
+test_predictions4 <- predict(logistic_model4, newdata = test_data, type = "response")
+predicted_classes4 <- ifelse(test_predictions > 0.5, "High", "Low")
+
+confusion_matrix4 <- table(Predicted = predicted_classes, Actual = test_response4)
+print(confusion_matrix4)
+
+accuracy4 <- sum(diag(confusion_matrix4)) / sum(confusion_matrix4)
+print(paste("Accuracy:", accuracy4))
+
+library(pROC)
+roc_result4 <- roc(test_response4, test_predictions4)
+plot(roc_result4, main = "ROC Curve for High Research Influence")
+auc_value4 <- auc(roc_result4)
+print(paste("AUC:", auc_value4))
+```
 
 # Method 5 - GABE
 
