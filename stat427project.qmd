@@ -133,48 +133,46 @@ data_clean <- data_clean[, c("rank", "name","scores_teaching","scores_research",
 
 ```{r}
 
-library(caret)  # Load caret for data partitioning
+library(caret)  # caret for training and testing
 
-# Assuming 'data_clean' is your dataset
-set.seed(123)  # Set a seed for reproducibility
+set.seed(123)  # seed
 
-# Split data into training (80%) and testing (20%)
+# training/testing split
 trainIndex <- createDataPartition(data_clean$clean_rank, p = 0.8, list = FALSE)
 train_data <- data_clean[trainIndex, ]
 test_data <- data_clean[-trainIndex, ]
 
-# Build linear model on training data
+# lm1
 linear_model <- lm(clean_rank ~ scores_teaching + scores_research + scores_citations + scores_industry_income + scores_international_outlook + stats_number_students + stats_student_staff_ratio + stats_pc_intl_students + female_proportion + International_School_binary, data = train_data)
 
-# Summarize the model
 summary(linear_model)
 
-# Build a second linear model on training data with fewer predictors
+# fewer predictors removing vars with multicollineraity while keeping r2 high
 linear_model2 <- lm(clean_rank ~ scores_citations + scores_industry_income + scores_international_outlook, data = train_data)
 summary(linear_model2)
 
-# Compare the two models using ANOVA
+# f test reduced model anova
 anova(linear_model, linear_model2)
 
 # Predicting on the test data
 test_predictions1 <- predict(linear_model, newdata = test_data)
 test_predictions2 <- predict(linear_model2, newdata = test_data)
 
-# Calculate MSE for model evaluations
+#mse's for comparison against other models later
 mse1 <- mean((test_predictions1 - test_data$clean_rank)^2)
 mse2 <- mean((test_predictions2 - test_data$clean_rank)^2)
 
-# Print MSE for both models
+#print
 print(paste("MSE for linear_model: ", mse1))
 print(paste("MSE for linear_model2: ", mse2))
 
-
+#4 qq plot etc
 par(mfrow=c(2,2))
 plot(linear_model2)
 
 
 
-# Print the VIF values
+#vif with car 
 library(car)
 vif_values <- vif(linear_model)
 print(vif_values)
@@ -207,46 +205,44 @@ library(tidyverse)
 library(glmnet)
 
 library(glmnet)
-library(caret)  # For data partitioning
+library(caret)
 
-# Assuming 'data_clean' is your dataset
-set.seed(123)  # Set a seed for reproducibility
+set.seed(123)  # seed 123
 
-# Split data into training (80%) and testing (20%)
+# 80/20 training testing split
 trainIndex <- createDataPartition(data_clean$clean_rank, p = 0.8, list = FALSE)
 train_data <- data_clean[trainIndex, ]
 test_data <- data_clean[-trainIndex, ]
 
-# Prepare predictors
+# create matrix for the predictors and do -1 
 train_predictors <- model.matrix(clean_rank ~ scores_teaching + scores_research + scores_citations + scores_industry_income + scores_international_outlook + stats_number_students + stats_student_staff_ratio + stats_pc_intl_students + female_proportion + International_School_binary - 1, data = train_data)
 test_predictors <- model.matrix(clean_rank ~ scores_teaching + scores_research + scores_citations + scores_industry_income + scores_international_outlook + stats_number_students + stats_student_staff_ratio + stats_pc_intl_students + female_proportion + International_School_binary - 1, data = test_data)
 
-# Response variable
+# y var 
 train_response <- train_data$clean_rank
 test_response <- test_data$clean_rank
 
-# Lasso regression model with cross-validation
+# cross validation
 cv_fit <- cv.glmnet(train_predictors, train_response, alpha = 1) # alpha=1 specifies Lasso regression
 
-# Find best lambda
+# lambda best 
 best_lambda <- cv_fit$lambda.min
 
-# Train final model with the best lambda on the training data
+# train using best lmambda
 final_model <- glmnet(train_predictors, train_response, alpha = 1, lambda = best_lambda)
 
-# Coefficients of the final model
+# lambda coefficients and any removalas of vars
 coef(final_model)
 
-# Plot CV error as function of lambda
+# plots
 plot(cv_fit$lambda, cv_fit$cvm, type='l', xlab='Lambda', ylab='Cross-Validated Error')
 points(cv_fit$lambda.min, cv_fit$cvm[cv_fit$lambda == cv_fit$lambda.min], col='red', pch=20)
 
-# Predict on test data
 predictions <- predict(final_model, s = best_lambda, newx = test_predictors)
 
-# Evaluate model performance
-mse <- mean((predictions - test_response)^2)
-mse
+#mse for comparison
+mse_lasso <- mean((predictions - test_response)^2)
+mse_lasso
 
 ```
 
