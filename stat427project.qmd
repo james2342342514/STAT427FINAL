@@ -93,9 +93,12 @@ sum(is.na(data_clean$clean_rank))
 #binary intl school var
 data_clean$International_School_binary <- ifelse(data_clean$International_School == "yes", 1, 0)
 
+data_clean$group = cut(data_clean$clean_rank, breaks = 5, labels = FALSE, include.lowest = TRUE)
 
+#this may or may not work because i changed the name so double check
+data_clean$rank_category = cut(data_clean$clean_rank, breaks = 5, labels = c("Global Elite", "Upper Middle", "Middle", "Lower Middle", "Lowest"), include.lowest = TRUE)
 
-data_clean <- data_clean[, c("rank", "name","scores_teaching","scores_research","scores_citations","scores_industry_income","scores_international_outlook","location","stats_number_students","stats_student_staff_ratio", "stats_pc_intl_students", "International_School","female_proportion", "clean_rank", "International_School_binary")]
+data_clean <- data_clean[, c("rank", "name","scores_teaching","scores_research","scores_citations","scores_industry_income","scores_international_outlook","location","stats_number_students","stats_student_staff_ratio", "stats_pc_intl_students", "International_School","female_proportion", "clean_rank", "International_School_binary", "rank_category")]
 
 ```
 
@@ -129,7 +132,7 @@ data_clean <- data_clean[, c("rank", "name","scores_teaching","scores_research",
 
     -   **clean_rank:** transformation on rank
 
-# Method 1 - Linear Regression JAMES
+# Method 1 - Linear Regression 
 
 ```{r}
 
@@ -196,7 +199,7 @@ print(vif_values)
 
 -   
 
-# Method 2 - JAMES
+# Method 2 - Lasso Regression
 
 ```{r}
 library(ISLR2)
@@ -286,7 +289,7 @@ print(paste("Test RMSE:", rmse3))
 
 # Method 4 - TOM
 
-```{r}
+```{r echo=FALSE, results='hide', message=FALSE, warning=FALSE}
 library(dplyr)
 library(caret)
 library(glmnet)  
@@ -324,9 +327,44 @@ auc_value4 <- auc(roc_result4)
 print(paste("AUC:", auc_value4))
 ```
 
-# Method 5 - GABE
+# Method 5 - LDA
 
-# Method 6 -GABE
+```{r}
+library(MASS)
+data_clean$group = cut(data_clean$clean_rank, breaks = 5, labels = FALSE, include.lowest = TRUE)
+
+#this may or may not work because i changed the name so double check
+data_clean$rank_category = cut(data_clean$clean_rank, breaks = 5, labels = c("Global Elite", "Upper Middle", "Middle", "Lower Middle", "Lowest"), include.lowest = TRUE)
+
+set.seed(123)
+
+lda_model <- lda(rank_category ~ scores_citations + scores_industry_income + scores_international_outlook + female_proportion + stats_number_students, data = train_data)
+
+predictions_lda <- predict(lda_model, test_data)
+
+confusion_matrix_lda <- table(Predicted = predictions_lda$class, Actual = test_data$rank_category)
+
+print(confusion_matrix_lda)
+
+accuracy_lda <- sum(diag(confusion_matrix_lda)) / sum(confusion_matrix_lda)
+print(paste("Accuracy:", accuracy_lda))
+
+```
+
+# Method 6 - QDA
+
+```{r}
+qda_model <- qda(rank_category ~ scores_citations + scores_industry_income + scores_international_outlook + female_proportion + stats_number_students, data = train_data)
+
+predictions_qda <- predict(qda_model, test_data)
+
+confusion_matrix_qda <- table(Predicted = predictions_qda$class, Actual = test_data$rank_category)
+
+print(confusion_matrix_qda)
+
+accuracy_qda <- sum(diag(confusion_matrix_qda)) / sum(confusion_matrix_qda)
+print(paste("Accuracy:", accuracy_qda))
+```
 
 # Identify the data source, describe the original data, and any challenges or choices in cleaning the data for analysis.
 
