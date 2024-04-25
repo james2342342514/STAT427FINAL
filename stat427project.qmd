@@ -249,7 +249,7 @@ mse_lasso
 
 ```
 
-# Method 3 - TOM
+# Method 3 - Ridge Regression
 
 ```{r}
 # Load necessary libraries
@@ -287,44 +287,36 @@ print(paste("Test RMSE:", rmse3))
 
 ```
 
-# Method 4 - TOM
+# Method 4 - Random Forest
 
 ```{r echo=FALSE, results='hide', message=FALSE, warning=FALSE}
-library(dplyr)
-library(caret)
-library(glmnet)  
+library(randomForest)
 
-threshold4 <- median(data_clean$scores_research, na.rm = TRUE)
+# Binary variable for high or low student-to-staff ratio
+data_clean$high_low_ratio <- ifelse(data_clean$stats_student_staff_ratio > median(data_clean$stats_student_staff_ratio), 1, 0)
 
-data_clean$High_Research_Influence <- ifelse(data_clean$scores_research > threshold4, "High", "Low")
-data_clean$High_Research_Influence <- as.factor(data_clean$High_Research_Influence)
+# Prepare the data
+trainIndex4 <- createDataPartition(data_clean$high_low_ratio, p = .8, 
+                                  list = FALSE, 
+                                  times = 1)
+trainData4 <- data_clean[trainIndex4,]
+testData4 <- data_clean[-trainIndex4,]
 
-predictors4 <- model.matrix(High_Research_Influence ~ . - 1 - scores_research, data = data_clean)
-response4 <- data_clean$High_Research_Influence
+# Fit Random Forest
+rf_model <- randomForest(high_low_ratio ~ scores_teaching + scores_research + scores_citations,
+                         data = trainData4,
+                         ntree = 500,
+                         mtry = 3,
+                         importance = TRUE)
 
-set.seed(123)  
-train_indices4 <- createDataPartition(response4, p = 0.8, list = TRUE)
-train_data4 <- predictors4[train_indices4[[1]], ]
-train_response4 <- response4[train_indices4[[1]]]
-test_data4 <- predictors4[-train_indices4[[1]], ]
-test_response4 <- response4[-train_indices4[[1]]]
+# Check model details
+print(rf_model)
+importance(rf_model)
 
-logistic_model4 <- glm(High_Research_Influence ~ ., family = binomial(), data = data_clean)
-
-test_predictions4 <- predict(logistic_model4, newdata = test_data, type = "response")
-predicted_classes4 <- ifelse(test_predictions > 0.5, "High", "Low")
-
-confusion_matrix4 <- table(Predicted = predicted_classes, Actual = test_response4)
-print(confusion_matrix4)
-
-accuracy4 <- sum(diag(confusion_matrix4)) / sum(confusion_matrix4)
-print(paste("Accuracy:", accuracy4))
-
-library(pROC)
-roc_result4 <- roc(test_response4, test_predictions4)
-plot(roc_result4, main = "ROC Curve for High Research Influence")
-auc_value4 <- auc(roc_result4)
-print(paste("AUC:", auc_value4))
+# Make predictions and evaluate the model
+rf_predictions <- predict(rf_model, newdata = testData4)
+rf_accuracy <- mean(rf_predictions == testData4$high_low_ratio)
+print(rf_accuracy)
 ```
 
 # Method 5 - LDA
